@@ -1,62 +1,30 @@
-import { useEffect, useState } from 'react';
-import { QueryClient, QueryClientProvider, useQuery } from 'react-query';
+import Script from 'next/script';
+import { QueryClient, QueryClientProvider } from 'react-query';
 
-import { CheckResponse } from './api/check';
-import { Loader } from 'components';
-import styles from './index.module.css';
+import { Home } from './home';
 
 const queryClient = new QueryClient();
-
-interface Coordinates {
-  latitude: number;
-  longitude: number;
-}
-
-const App = () => {
-  const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
-
-  const doCheck = async (coords: Coordinates | null) => {
-    if (!coords) return Promise.resolve();
-
-    return fetch(
-      `/api/check?latitude=${coords.latitude}&longitude=${coords.longitude}`
-    ).then((res) => res.json());
-  };
-
-  const { isLoading, data } = useQuery<CheckResponse, any>(
-    ['check', coordinates],
-    () => doCheck(coordinates)
-  );
-
-  const checkWeather = async (location: GeolocationPosition) => {
-    const {
-      coords: { latitude, longitude },
-    } = location;
-
-    setCoordinates({ latitude, longitude });
-  };
-
-  useEffect(() => {
-    navigator.geolocation.getCurrentPosition(checkWeather);
-  }, []);
-
-  if (isLoading || !data) {
-    return (
-      <main className={styles.container}>
-        <Loader />
-      </main>
-    );
-  }
-
-  return (
-    <main className={styles.container}>
-      <h1>{data?.isItTshirtWeather ? <>YES</> : <>NO</>}</h1>
-    </main>
-  );
-};
+const GA_MEASUREMENT_ID =
+  process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_MEASUREMENT_ID;
 
 export default () => (
-  <QueryClientProvider client={queryClient}>
-    <App />
-  </QueryClientProvider>
+  <>
+    <Script
+      src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+      strategy="beforeInteractive"
+    />
+    <Script id="google-analytics" strategy="beforeInteractive">
+      {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){window.dataLayer.push(arguments);}
+          gtag('js', new Date());
+
+          gtag('config', ${GA_MEASUREMENT_ID});
+        `}
+    </Script>
+
+    <QueryClientProvider client={queryClient}>
+      <Home />
+    </QueryClientProvider>
+  </>
 );
