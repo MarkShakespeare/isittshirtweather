@@ -40,7 +40,7 @@ const App = () => {
     navigator.geolocation.getCurrentPosition(checkWeather);
   }, []);
 
-  if (isLoading) {
+  if (isLoading || !data) {
     return (
       <main className={styles.container}>
         <Loader />
