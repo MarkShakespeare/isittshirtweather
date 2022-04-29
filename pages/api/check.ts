@@ -41,6 +41,7 @@ export default async function handler(
 
   const response = await fetch(requestUrl);
   const weatherResponse: WeatherResponse = await response.json();
+
   const isItTshirtWeather = calculateIfTShirtWeather(weatherResponse);
 
   res.status(200).json({ isItTshirtWeather });
