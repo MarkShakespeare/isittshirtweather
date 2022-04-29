@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
 
-import { CheckResponse } from './api/check';
+import { CheckResponse } from 'pages/api/check';
 import { Loader } from 'components';
-import styles from './index.module.css';
+import styles from './home.module.css';
 
 interface Coordinates {
   latitude: number;

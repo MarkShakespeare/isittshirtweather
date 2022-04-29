@@ -1,7 +1,7 @@
 import Script from 'next/script';
 import { QueryClient, QueryClientProvider } from 'react-query';
 
-import { Home } from './home';
+import { Home } from 'components';
 
 const queryClient = new QueryClient();
 const GA_MEASUREMENT_ID =
