@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 const openWeatherMapApiKey = process.env.OPEN_WEATHER_MAP_API_KEY;
 const openWeatherMapApiUrl = process.env.OPEN_WEATHER_MAP_API_URL;
 
-const LOWEST_FEELS_LIKE = 19;
+const LOWEST_FEELS_LIKE = 17;
 
 export interface CheckResponse {
   isItTshirtWeather: boolean;
