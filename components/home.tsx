@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
 
-import { CheckResponse } from 'pages/api/check';
+import { CheckResponse, CheckLaterResponse } from 'lib';
 import { Loader } from 'components';
 import styles from './home.module.css';
 
@@ -13,17 +13,37 @@ interface Coordinates {
 export const Home = () => {
   const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
 
-  const doCheck = async (coords: Coordinates | null) => {
+  const getWeatherNow = async (coords: Coordinates | null) => {
     if (!coords) return Promise.resolve();
 
     return fetch(
-      `/api/check?latitude=${coords.latitude}&longitude=${coords.longitude}`
+      `/api/check/now?latitude=${coords.latitude}&longitude=${coords.longitude}`
     ).then((res) => res.json());
   };
 
-  const { isLoading, data } = useQuery<CheckResponse, any>(
-    ['check', coordinates],
-    () => doCheck(coordinates)
+  const getWeatherLater = async (
+    coords: Coordinates | null,
+    nowResponse: CheckResponse | undefined
+  ) => {
+    if (!coords) return Promise.resolve();
+    if (!nowResponse) return Promise.resolve();
+    if (nowResponse.isItTshirtWeather) return Promise.resolve();
+
+    return fetch(
+      `/api/check/later?latitude=${coords.latitude}&longitude=${coords.longitude}`
+    ).then((res) => res.json());
+  };
+
+  const { isLoading: isCheckNowLoading, data: nowResponse } = useQuery<
+    CheckResponse,
+    any
+  >(['checkNow', coordinates], () => getWeatherNow(coordinates));
+
+  const { isLoading: isCheckLaterLoading, data: laterResponse } = useQuery<
+    CheckLaterResponse,
+    any
+  >(['checkLater', nowResponse], () =>
+    getWeatherLater(coordinates, nowResponse)
   );
 
   const checkWeather = async (location: GeolocationPosition) => {
@@ -38,7 +58,7 @@ export const Home = () => {
     navigator.geolocation.getCurrentPosition(checkWeather);
   }, []);
 
-  if (isLoading || !data) {
+  if (isCheckNowLoading || isCheckLaterLoading || !nowResponse) {
     return (
       <main className={styles.container}>
         <Loader />
@@ -48,7 +68,13 @@ export const Home = () => {
 
   return (
     <main className={styles.container}>
-      <h1>{data?.isItTshirtWeather ? <>YES</> : <>NO</>}</h1>
+      <h1>{nowResponse?.isItTshirtWeather ? <>YES</> : <>NO</>}</h1>
+
+      {laterResponse?.isItTshirtWeatherLater && (
+        <h2>
+          It will be T-shirt weather at {laterResponse?.tShirtWeatherLaterTime}
+        </h2>
+      )}
     </main>
   );
 };
