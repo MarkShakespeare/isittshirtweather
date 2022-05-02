@@ -24,11 +24,15 @@ const getFirstTShirtWeatherHour = (
   return rest.find((hour) => hour.feels_like > LOWEST_FEELS_LIKE);
 };
 
-const LOCALE = 'en-UK';
-const FINAL_HOUR_OF_DAY = '23:00';
+const isToday = (date: Date) => {
+  const today = new Date();
+  return date.getDate() === today.getDate();
+};
 
-const formatHour = (hour: WeatherHourly) =>
-  new Date(hour.dt * 1000).toLocaleTimeString(LOCALE, {
+const DEFAULT_LOCALE = 'en-GB';
+
+const formatHour = (hour: WeatherHourly, userLocale: string) =>
+  new Date(hour.dt * 1000).toLocaleTimeString(userLocale, {
     hour: '2-digit',
     minute: '2-digit',
   });
@@ -38,9 +42,7 @@ const filterTodayHours = (hours: WeatherHourly[]): WeatherHourly[] => {
 
   // the weather returns multiple days of hours but we only want todays
   for (let [, hour] of hours.entries()) {
-    const formattedHour = formatHour(hour);
-    if (formattedHour === FINAL_HOUR_OF_DAY) {
-      todayHours.push(hour);
+    if (!isToday(new Date(hour.dt * 1000))) {
       break;
     }
 
@@ -55,16 +57,25 @@ export default async function handler(
   res: NextApiResponse<CheckLaterResponse>
 ) {
   const { latitude, longitude } = req.query;
+
+  // get user preferred locale
+  const requestLocales = req.headers['accept-language']?.split(',');
+  const userLocale = requestLocales ? requestLocales[0] : DEFAULT_LOCALE;
+
   const requestUrl = `${OPEN_WEATHER_MAP_API_URL}/onecall?lat=${latitude}&lon=${longitude}&appid=${OPEN_WEATHER_MAP_API_KEY}&units=metric&exclude=current,minutely,daily,alerts`;
 
   const response = await fetch(requestUrl);
   const weatherResponse: WeatherHourlyResponse = await response.json();
 
   const todayHours = filterTodayHours(weatherResponse.hourly);
+
   const firstTShirtWeather = getFirstTShirtWeatherHour(todayHours);
 
   if (firstTShirtWeather) {
-    const formattedFirstTShirtWeather = formatHour(firstTShirtWeather);
+    const formattedFirstTShirtWeather = formatHour(
+      firstTShirtWeather,
+      userLocale
+    );
 
     return res.status(200).json({
       isItTshirtWeatherLater: true,
