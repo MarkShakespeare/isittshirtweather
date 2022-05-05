@@ -5,20 +5,22 @@ import {
   CheckResponse,
   OPEN_WEATHER_MAP_API_KEY,
   OPEN_WEATHER_MAP_API_URL,
-  calculateIfTShirtWeather,
+  LOWEST_FEELS_LIKE,
 } from 'lib';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<CheckResponse>
 ) {
-  const { latitude, longitude } = req.query;
+  const { latitude, longitude, customBaseLine } = req.query;
   const requestUrl = `${OPEN_WEATHER_MAP_API_URL}/weather?lat=${latitude}&lon=${longitude}&appid=${OPEN_WEATHER_MAP_API_KEY}&units=metric`;
 
   const response = await fetch(requestUrl);
   const weatherResponse: WeatherResponse = await response.json();
 
-  const isItTshirtWeather = calculateIfTShirtWeather(weatherResponse);
+  const baseline = Number(customBaseLine) || LOWEST_FEELS_LIKE;
 
-  res.status(200).json({ isItTshirtWeather });
+  const isItTshirtWeather = weatherResponse.main.feels_like >= baseline;
+
+  res.status(200).json({ isItTshirtWeather, baseline });
 }

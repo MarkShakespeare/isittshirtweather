@@ -1,5 +1,6 @@
 export interface CheckResponse {
   isItTshirtWeather: boolean;
+  baseline: number;
 }
 
 export interface CheckLaterResponse {
@@ -18,4 +19,9 @@ export interface MainWeather {
 
 export interface WeatherResponse {
   main: MainWeather;
+}
+
+export interface Coordinates {
+  latitude: number;
+  longitude: number;
 }

@@ -1,23 +1,21 @@
-import { useEffect, useState } from 'react';
+import React from 'react';
 import { useQuery } from 'react-query';
 
-import { CheckResponse, CheckLaterResponse } from 'lib';
+import { CheckResponse, CheckLaterResponse, Coordinates } from 'lib';
 import { Loader } from 'components';
 import styles from './home.module.css';
 
-interface Coordinates {
-  latitude: number;
-  longitude: number;
+interface Props {
+  coordinates: Coordinates;
+  customBaseLine?: string;
 }
 
-export const Home = () => {
-  const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
-
+export const Home: React.FC<Props> = ({ customBaseLine, coordinates }) => {
   const getWeatherNow = async (coords: Coordinates | null) => {
     if (!coords) return Promise.resolve();
 
     return fetch(
-      `/api/check/now?latitude=${coords.latitude}&longitude=${coords.longitude}`
+      `/api/check/now?latitude=${coords.latitude}&longitude=${coords.longitude}&customBaseLine=${customBaseLine}`
     ).then((res) => res.json());
   };
 
@@ -30,7 +28,7 @@ export const Home = () => {
     if (nowResponse.isItTshirtWeather) return Promise.resolve();
 
     return fetch(
-      `/api/check/later?latitude=${coords.latitude}&longitude=${coords.longitude}`
+      `/api/check/later?latitude=${coords.latitude}&longitude=${coords.longitude}&customBaseLine=${customBaseLine}`
     ).then((res) => res.json());
   };
 
@@ -46,35 +44,19 @@ export const Home = () => {
     getWeatherLater(coordinates, nowResponse)
   );
 
-  const checkWeather = async (location: GeolocationPosition) => {
-    const {
-      coords: { latitude, longitude },
-    } = location;
-
-    setCoordinates({ latitude, longitude });
-  };
-
-  useEffect(() => {
-    navigator.geolocation.getCurrentPosition(checkWeather);
-  }, []);
-
   if (isCheckNowLoading || isCheckLaterLoading || !nowResponse) {
-    return (
-      <main className={styles.container}>
-        <Loader />
-      </main>
-    );
+    return <Loader />;
   }
 
   return (
-    <main className={styles.container}>
+    <>
       <h1>{nowResponse?.isItTshirtWeather ? <>YES</> : <>NO</>}</h1>
 
       {laterResponse?.isItTshirtWeatherLater && (
-        <h2>
+        <h2 className={styles.description}>
           It will be T-shirt weather at {laterResponse?.tShirtWeatherLaterTime}
         </h2>
       )}
-    </main>
+    </>
   );
 };

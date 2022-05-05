@@ -1,6 +1,9 @@
 import Script from 'next/script';
+import { QueryClient, QueryClientProvider } from 'react-query';
 
 import './styles.css';
+
+const queryClient = new QueryClient();
 
 const GA_MEASUREMENT_ID =
   process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_MEASUREMENT_ID;
@@ -28,7 +31,9 @@ const App = ({ Component, pageProps }) => (
       }}
     />
 
-    <Component {...pageProps} />
+    <QueryClientProvider client={queryClient}>
+      <Component {...pageProps} />
+    </QueryClientProvider>
   </>
 );
 
